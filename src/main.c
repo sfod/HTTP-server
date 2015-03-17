@@ -1,13 +1,22 @@
 #include <stdlib.h>
+#include <time.h>
 
+#include <event2/buffer.h>
 #include <event2/event.h>
 #include <event2/http.h>
 
 static void time_request_cb(struct evhttp_request *req, void *arg)
 {
     (void) arg;
+    struct evbuffer *evb = evbuffer_new();
+
     printf("Received request for %s\n", evhttp_request_get_uri(req));
-    evhttp_send_reply(req, 200, "OK", NULL);
+
+    time_t ts = time(NULL);
+    evbuffer_add_printf(evb, "%s", ctime(&ts));
+
+    evhttp_send_reply(req, 200, "OK", evb);
+    evbuffer_free(evb);
 }
 
 int main(int argc, char **argv) {
